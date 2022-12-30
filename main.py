@@ -1,4 +1,5 @@
 import pygame, sys
+from random import randint
 
 screen_size_menu = width, hieght = 900, 600
 screen_size_level = width_level, hieght_level = 300, 700
@@ -6,6 +7,7 @@ FPS = 60
 current_level = 1
 enemy_sprites = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
+heroes = pygame.sprite.Group()
 screen = None
 
 
@@ -64,6 +66,7 @@ def draw_level1():
     global screen
     screen = pygame.display.set_mode(screen_size_level)
     going = True
+    clock = pygame.time.Clock()
 
     cell_width = 100
     for i in range(7):
@@ -71,8 +74,25 @@ def draw_level1():
             pygame.draw.rect(screen, (255, 255, 255), (j * cell_width, i * cell_width, cell_width, cell_width), 1)
 
     enemy1, enemy2, enemy3 = Enemy(0, enemy_sprites), Enemy(1, enemy_sprites), Enemy(2, enemy_sprites)
+    hero = Hero1(heroes)
+    heroes.draw(screen)
     enemy_sprites.draw(screen)
-    enemy3.shoot()
+    while going:
+        # c = choice(enemy_sprites)
+        # c.shoot()
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    hero.move(0)
+                elif event.key == pygame.K_LEFT:
+                    hero.move(-1)
+                elif event.key == pygame.K_RIGHT:
+                    hero.move(1)
+                heroes.draw(screen)
+            elif event.type == pygame.QUIT:
+                end_session()
+        clock.tick(FPS)
+        pygame.display.update()
 
 
 class Enemy(pygame.sprite.Sprite):
@@ -90,7 +110,7 @@ class Enemy(pygame.sprite.Sprite):
     def shoot(self):
         global screen
         bullet = Shot(self.n, bullets)
-        for _ in range(3):
+        while bullet.rect.y <= 700:
             bullets.draw(screen)
             bullet.move()
             pygame.display.flip()
@@ -113,10 +133,30 @@ class Shot(pygame.sprite.Sprite):
         self.rect = self.rect.move(0, 100)
 
 
+def choice(group):
+    n = randint(1, len(group))
+    i = 1
+    for spr in enemy_sprites:
+        if i == n:
+            return spr
+        i += 1
+
 
 class Hero1(pygame.sprite.Sprite):
-    def __init__(self):
-        pass
+    image = download_image('hero1.png')
+
+    def __init__(self, *group):
+        super().__init__(*group)
+        self.image = Hero1.image
+        self.rect = self.image.get_rect()
+        self.rect.x = 100
+        self.rect.y = 600
+
+    def move(self, direction):
+        pygame.draw.rect(screen, (0, 0, 0), (self.rect.x + 1, self.rect.y + 1, 98, 98), 0)
+        self.rect.y -= 100
+        self.rect.x += (100 * direction)
+        self.rect.x %= 300
 
 
 start_game()
