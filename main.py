@@ -78,8 +78,17 @@ def draw_level1():
     heroes.draw(screen)
     enemy_sprites.draw(screen)
     while going:
-        # c = choice(enemy_sprites)
-        # c.shoot()
+        c = choice(enemy_sprites)
+        bullet = Shot(c.n, bullets)
+        while bullet.rect.y <= 700:
+            # if pygame.QUIT in map(lambda x: x.type(), pygame.event.get()):
+            #     end_session()
+            bullets.draw(screen)
+            bullet.move()
+            pygame.display.flip()
+            clock.tick(10)
+            if hero.rect.colliderect(bullet.rect):
+                draw_main_menu()
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
@@ -107,14 +116,14 @@ class Enemy(pygame.sprite.Sprite):
         self.n = n
         self.clock = pygame.time.Clock()
 
-    def shoot(self):
-        global screen
-        bullet = Shot(self.n, bullets)
-        while bullet.rect.y <= 700:
-            bullets.draw(screen)
-            bullet.move()
-            pygame.display.flip()
-            self.clock.tick(1)
+    # def shoot(self):
+    #     global screen
+    #     bullet = Shot(self.n, bullets)
+    #     while bullet.rect.y <= 700:
+    #         bullets.draw(screen)
+    #         bullet.move()
+    #         pygame.display.flip()
+    #         self.clock.tick(10)
 
 
 class Shot(pygame.sprite.Sprite):
@@ -126,6 +135,8 @@ class Shot(pygame.sprite.Sprite):
         self.rect = Shot.image.get_rect()
         self.rect.x = 100 * n
         self.rect.y = 100
+        if pygame.sprite.spritecollideany(self, heroes):
+            print(1)
 
     def move(self):
         if self.rect.y != 100:
