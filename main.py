@@ -57,6 +57,56 @@ def draw_main_menu():
         pygame.display.flip()
 
 
+def draw_lose_screen():
+    global screen
+    screen = pygame.display.set_mode(screen_size_menu)
+    going = True
+
+    background = download_image('forest_fon.png')
+    background = pygame.transform.scale(background, (900, 600))
+    screen.blit(background, (0, 0))
+
+    pygame.draw.rect(screen, (255, 255, 255), (325, 263, 250, 74), 1)
+    font = pygame.font.Font(None, 82)
+    font_render = font.render('ЗАНОВО', 1, pygame.Color('white'))
+    font_rect = (327, 275, 250, 74)
+    screen.blit(font_render, font_rect)
+
+    while going:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                end_session()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if belongs(325, 263, 575, 337, *event.pos):
+                    draw_level()
+        pygame.display.flip()
+
+
+def draw_win_screen():
+    global screen
+    screen = pygame.display.set_mode(screen_size_menu)
+    going = True
+
+    background = download_image('forest_fon.png')
+    background = pygame.transform.scale(background, (900, 600))
+    screen.blit(background, (0, 0))
+
+    pygame.draw.rect(screen, (255, 255, 255), (325, 263, 250, 74), 1)
+    font = pygame.font.Font(None, 79)
+    font_render = font.render('ПОБЕДА', 1, pygame.Color('white'))
+    font_rect = (327, 275, 250, 74)
+    screen.blit(font_render, font_rect)
+
+    while going:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                end_session()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if belongs(325, 263, 575, 337, *event.pos):
+                    draw_level()
+        pygame.display.flip()
+
+
 def draw_level():
     if current_level == 1:
         draw_level1()
@@ -65,6 +115,7 @@ def draw_level():
 def draw_level1():
     global screen
     screen = pygame.display.set_mode(screen_size_level)
+    screen.fill((0, 0, 0))
     going = True
     clock = pygame.time.Clock()
 
@@ -77,7 +128,27 @@ def draw_level1():
     hero = Hero1(heroes)
     heroes.draw(screen)
     enemy_sprites.draw(screen)
+    steps = 1
+    steps_done = 0
     while going:
+        pygame.display.update()
+        while steps != steps_done:
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP:
+                        hero.move(0)
+                        steps_done += 1
+                    elif event.key == pygame.K_LEFT:
+                        hero.move(-1)
+                        steps_done += 1
+                    elif event.key == pygame.K_RIGHT:
+                        hero.move(1)
+                        steps_done += 1
+                    heroes.draw(screen)
+                elif event.type == pygame.QUIT:
+                    end_session()
+        if pygame.sprite.spritecollideany(hero, enemy_sprites):
+            draw_win_screen()
         c = choice(enemy_sprites)
         bullet = Shot(c.n, bullets)
         while bullet.rect.y <= 700:
@@ -87,19 +158,11 @@ def draw_level1():
             bullet.move()
             pygame.display.flip()
             clock.tick(10)
-            if hero.rect.colliderect(bullet.rect):
-                draw_main_menu()
-        for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:
-                    hero.move(0)
-                elif event.key == pygame.K_LEFT:
-                    hero.move(-1)
-                elif event.key == pygame.K_RIGHT:
-                    hero.move(1)
-                heroes.draw(screen)
-            elif event.type == pygame.QUIT:
-                end_session()
+            # if hero.rect.colliderect(bullet.rect):
+            #     bullet.kill()
+            #     hero.kill()
+            #     draw_lose_screen()
+        steps += 1
         clock.tick(FPS)
         pygame.display.update()
 
@@ -145,6 +208,7 @@ class Shot(pygame.sprite.Sprite):
 
 
 def choice(group):
+    global enemy_sprites
     n = randint(1, len(group))
     i = 1
     for spr in enemy_sprites:
