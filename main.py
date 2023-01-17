@@ -1,10 +1,11 @@
 import pygame, sys
-from random import randint
+from random import randint, sample
 
 screen_size_menu = width, hieght = 900, 600
 screen_size_level = width_level, hieght_level = 300, 700
 FPS = 60
 current_level = 1
+boss_sprite = pygame.sprite.Group()
 enemy_sprites = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
 heroes = pygame.sprite.Group()
@@ -148,7 +149,9 @@ def draw_level1():
                 elif event.type == pygame.QUIT:
                     end_session()
         if pygame.sprite.spritecollideany(hero, enemy_sprites):
-            draw_win_screen()
+            bullet.kill()
+            hero.kill()
+            draw_final_level()
         c = choice(enemy_sprites)
         bullet = Shot(c.n, bullets)
         while bullet.rect.y <= 700:
@@ -158,13 +161,84 @@ def draw_level1():
             bullet.move()
             pygame.display.flip()
             clock.tick(10)
-            # if hero.rect.colliderect(bullet.rect):
-            #     bullet.kill()
-            #     hero.kill()
-            #     draw_lose_screen()
+            if hero.rect.colliderect(bullet.rect):
+                bullet.kill()
+                hero.kill()
+                draw_lose_screen()
         steps += 1
         clock.tick(FPS)
         pygame.display.update()
+
+
+def draw_final_level():
+    global screen
+    screen = pygame.display.set_mode(screen_size_level)
+    screen.fill((0, 0, 0))
+    going = True
+    clock = pygame.time.Clock()
+
+    cell_width = 100
+    for i in range(7):
+        for j in range(3):
+            pygame.draw.rect(screen, (255, 255, 255), (j * cell_width, i * cell_width, cell_width, cell_width), 1)
+
+    boss = FinalBoss(boss_sprite)
+    boss_sprite.draw(screen)
+
+    hero = Hero1(heroes)
+    heroes.draw(screen)
+    steps = 1
+    steps_done = 0
+    while going:
+        pygame.display.update()
+        while steps != steps_done:
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP:
+                        hero.move(0)
+                        steps_done += 1
+                    elif event.key == pygame.K_LEFT:
+                        hero.move(-1)
+                        steps_done += 1
+                    elif event.key == pygame.K_RIGHT:
+                        hero.move(1)
+                        steps_done += 1
+                    heroes.draw(screen)
+                elif event.type == pygame.QUIT:
+                    end_session()
+        if pygame.sprite.spritecollideany(hero, boss_sprite):
+            bullet1.kill()
+            bullet2.kill()
+            hero.kill()
+            draw_win_screen()
+        shots = sample([0, 1, 2], 2)
+        bullet1, bullet2 = Shot(shots[0], bullets, final=True), Shot(shots[1], bullets, final=True)
+        while bullet1.rect.y <= 700:
+            # if pygame.QUIT in map(lambda x: x.type(), pygame.event.get()):
+            #     end_session()
+            bullets.draw(screen)
+            bullet1.move()
+            bullet2.move()
+            pygame.display.flip()
+            clock.tick(10)
+            if hero.rect.colliderect(bullet1.rect) or hero.rect.colliderect(bullet2.rect):
+                bullet1.kill()
+                bullet2.kill()
+                hero.kill()
+                draw_lose_screen()
+        steps += 1
+        clock.tick(FPS)
+        pygame.display.update()
+
+
+class FinalBoss(pygame.sprite.Sprite):
+    image = download_image('boss.png')
+
+    def __init__(self, *group):
+        super().__init__(*group)
+        self.image = FinalBoss.image
+        self.rect = self.image.get_rect()
+        self.rect.x = self.rect.y = 0
 
 
 class Enemy(pygame.sprite.Sprite):
@@ -192,12 +266,15 @@ class Enemy(pygame.sprite.Sprite):
 class Shot(pygame.sprite.Sprite):
     image = download_image('bullet.png')
 
-    def __init__(self, n, *group):
+    def __init__(self, n, *group, final=False):
         super().__init__(*group)
         self.image = Shot.image
         self.rect = Shot.image.get_rect()
         self.rect.x = 100 * n
-        self.rect.y = 100
+        if final:
+            self.rect.y = 200
+        else:
+            self.rect.y = 100
         if pygame.sprite.spritecollideany(self, heroes):
             print(1)
 
