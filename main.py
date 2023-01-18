@@ -113,6 +113,43 @@ def draw_level():
         draw_level1()
 
 
+def draw_between_level_menu():
+    global screen
+
+    pygame.font.init()
+    screen = pygame.display.set_mode(screen_size_menu)
+    going = True
+
+    background = download_image('forest_fon.png')
+    background = pygame.transform.scale(background, (900, 600))
+    screen.blit(background, (0, 0))
+
+    rect1 = (325, 263, 250, 45)
+    pygame.draw.rect(screen, (255, 255, 255), rect1, 1)
+    font = pygame.font.Font(None, 27)
+    font_render = font.render('СЛЕДУЮЩИЙ УРОВЕНЬ', 1, pygame.Color('white'))
+    font_rect = (335, 275, 250, 74)
+    screen.blit(font_render, font_rect)
+
+    rect2 = (325, 335, 250, 74)
+    pygame.draw.rect(screen, (255, 255, 255), rect2, 1)
+    font = pygame.font.Font(None, 83)
+    font_render = font.render('МЕНЮ', 1, pygame.Color('white'))
+    font_rect = (357, 346, 250, 74)
+    screen.blit(font_render, font_rect)
+
+    while going:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                end_session()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if belongs(325, 263, 575, 307, *event.pos):
+                    draw_final_level()
+                elif belongs(325, 335, 575, 409, *event.pos):
+                    draw_main_menu()
+        pygame.display.flip()
+
+
 def draw_level1():
     global screen
     screen = pygame.display.set_mode(screen_size_level)
@@ -151,7 +188,7 @@ def draw_level1():
         if pygame.sprite.spritecollideany(hero, enemy_sprites):
             bullet.kill()
             hero.kill()
-            draw_final_level()
+            draw_between_level_menu()
         c = choice(enemy_sprites)
         bullet = Shot(c.n, bullets)
         while bullet.rect.y <= 700:
