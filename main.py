@@ -4,11 +4,27 @@ from random import randint, sample
 screen_size_menu = width, hieght = 900, 600
 screen_size_level = width_level, hieght_level = 300, 700
 FPS = 60
+
 current_level = 1
+
 boss_sprite = pygame.sprite.Group()
 enemy_sprites = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
 heroes = pygame.sprite.Group()
+
+pygame.mixer.init()
+button_sound = pygame.mixer.Sound('data/button.mp3')
+step_sound = pygame.mixer.Sound('data/step.mp3')
+shot_sound = pygame.mixer.Sound('data/shot.mp3')
+defeat_sound = pygame.mixer.Sound('data/defeat.mp3')
+win_sound = pygame.mixer.Sound('data/victory.mp3')
+
+button_sound.set_volume(1)
+step_sound.set_volume(1)
+shot_sound.set_volume(0.5)
+defeat_sound.set_volume(0.3)
+win_sound.set_volume(0.4)
+
 screen = None
 
 
@@ -35,6 +51,12 @@ def belongs(toX1, toY1, toX2, toY2, X, Y):
 
 def draw_main_menu():
     pygame.init()
+
+    pygame.mixer.init()
+    pygame.mixer.music.load('data/music.mp3')
+    pygame.mixer.music.play(-1)
+    pygame.mixer.music.set_volume(0.07)
+
     global screen
     screen = pygame.display.set_mode(screen_size_menu)
     going = True
@@ -54,6 +76,11 @@ def draw_main_menu():
                 end_session()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if belongs(325, 263, 575, 337, *event.pos):
+                    button_sound.play()
+                    draw_level()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    button_sound.play()
                     draw_level()
         pygame.display.flip()
 
@@ -79,6 +106,11 @@ def draw_lose_screen():
                 end_session()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if belongs(325, 263, 575, 337, *event.pos):
+                    button_sound.play()
+                    draw_level()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    button_sound.play()
                     draw_level()
         pygame.display.flip()
 
@@ -104,6 +136,7 @@ def draw_win_screen():
                 end_session()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if belongs(325, 263, 575, 337, *event.pos):
+                    button_sound.play()
                     draw_level()
         pygame.display.flip()
 
@@ -144,8 +177,10 @@ def draw_between_level_menu():
                 end_session()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if belongs(325, 263, 575, 307, *event.pos):
+                    button_sound.play()
                     draw_final_level()
                 elif belongs(325, 335, 575, 409, *event.pos):
+                    button_sound.play()
                     draw_main_menu()
         pygame.display.flip()
 
@@ -174,31 +209,39 @@ def draw_level1():
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_UP:
+                        step_sound.play()
                         hero.move(0)
                         steps_done += 1
                     elif event.key == pygame.K_LEFT:
+                        step_sound.play()
                         hero.move(-1)
                         steps_done += 1
                     elif event.key == pygame.K_RIGHT:
+                        step_sound.play()
                         hero.move(1)
                         steps_done += 1
                     heroes.draw(screen)
                 elif event.type == pygame.QUIT:
                     end_session()
         if pygame.sprite.spritecollideany(hero, enemy_sprites):
+            win_sound.play()
             bullet.kill()
             hero.kill()
             draw_between_level_menu()
         c = choice(enemy_sprites)
         bullet = Shot(c.n, bullets)
+        shot_sound.play()
         while bullet.rect.y <= 700:
             # if pygame.QUIT in map(lambda x: x.type(), pygame.event.get()):
             #     end_session()
-            bullets.draw(screen)
+            if bullet.rect.y != 0:
+                bullets.draw(screen)
             bullet.move()
+            enemy_sprites.draw(screen)
             pygame.display.flip()
             clock.tick(10)
             if hero.rect.colliderect(bullet.rect):
+                defeat_sound.play()
                 bullet.kill()
                 hero.kill()
                 draw_lose_screen()
@@ -232,33 +275,39 @@ def draw_final_level():
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_UP:
+                        step_sound.play()
                         hero.move(0)
                         steps_done += 1
                     elif event.key == pygame.K_LEFT:
+                        step_sound.play()
                         hero.move(-1)
                         steps_done += 1
                     elif event.key == pygame.K_RIGHT:
+                        step_sound.play()
                         hero.move(1)
                         steps_done += 1
                     heroes.draw(screen)
                 elif event.type == pygame.QUIT:
                     end_session()
         if pygame.sprite.spritecollideany(hero, boss_sprite):
+            win_sound.play()
             bullet1.kill()
             bullet2.kill()
             hero.kill()
             draw_win_screen()
         shots = sample([0, 1, 2], 2)
         bullet1, bullet2 = Shot(shots[0], bullets, final=True), Shot(shots[1], bullets, final=True)
+        shot_sound.play()
         while bullet1.rect.y <= 700:
             # if pygame.QUIT in map(lambda x: x.type(), pygame.event.get()):
             #     end_session()
-            bullets.draw(screen)
             bullet1.move()
             bullet2.move()
+            bullets.draw(screen)
             pygame.display.flip()
             clock.tick(10)
             if hero.rect.colliderect(bullet1.rect) or hero.rect.colliderect(bullet2.rect):
+                defeat_sound.play()
                 bullet1.kill()
                 bullet2.kill()
                 hero.kill()
@@ -311,12 +360,12 @@ class Shot(pygame.sprite.Sprite):
         if final:
             self.rect.y = 200
         else:
-            self.rect.y = 100
+            self.rect.y = 0
         if pygame.sprite.spritecollideany(self, heroes):
             print(1)
 
     def move(self):
-        if self.rect.y != 100:
+        if self.rect.y != 0:
             pygame.draw.rect(screen, (0, 0, 0), (self.rect.x + 1, self.rect.y + 1 - 100, 98, 98), 0)
         self.rect = self.rect.move(0, 100)
 
