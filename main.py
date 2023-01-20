@@ -7,11 +7,13 @@ FPS = 60
 
 current_level = 1
 
+"""Создание групп спрайтов"""
 boss_sprite = pygame.sprite.Group()
 enemy_sprites = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
 heroes = pygame.sprite.Group()
 
+"""Звуковые эффекты"""
 pygame.mixer.init()
 button_sound = pygame.mixer.Sound('data/button.mp3')
 step_sound = pygame.mixer.Sound('data/step.mp3')
@@ -19,6 +21,7 @@ shot_sound = pygame.mixer.Sound('data/shot.mp3')
 defeat_sound = pygame.mixer.Sound('data/defeat.mp3')
 win_sound = pygame.mixer.Sound('data/victory.mp3')
 
+"""Настройка звука"""
 button_sound.set_volume(1)
 step_sound.set_volume(1)
 shot_sound.set_volume(0.5)
@@ -29,27 +32,40 @@ screen = None
 
 
 def start_game():
+    """Функция начала игры"""
     draw_main_menu()
 
 
 def end_session():
+    """Функция окончания игры"""
     pygame.quit()
     sys.exit()
 
 
 def download_image(name):
+    """Функция загрузки изображения"""
     name = 'data/' + name
     im = pygame.image.load(name)
     return im
 
 
 def belongs(toX1, toY1, toX2, toY2, X, Y):
+    """Функция проверки нажатия на кнопку"""
     if toX1 <= X <= toX2 and toY1 <= Y <= toY2:
         return True
     return False
 
 
 def draw_main_menu():
+
+    """
+    Функция отрисовки начального меню
+        В функции иницилизируется pygame и mixer
+        В функции включается и настраивается фоновая музыка,
+            создаётся кнопка начала уровня
+    :return:
+    """
+
     pygame.init()
 
     pygame.mixer.init()
@@ -86,6 +102,13 @@ def draw_main_menu():
 
 
 def draw_lose_screen():
+
+    """
+    Функция отрисовки начального меню
+        В функции создаётся кнопка перезагрузки уровня
+    :return:
+    """
+
     global screen
     screen = pygame.display.set_mode(screen_size_menu)
     going = True
@@ -116,6 +139,14 @@ def draw_lose_screen():
 
 
 def draw_win_screen():
+
+    """
+        Функция отрисовки меню победы
+            При нажитии на кнопку игра запускается заново
+        В функции создаётся кнопка победы
+    :return:
+    """
+
     global screen
     screen = pygame.display.set_mode(screen_size_menu)
     going = True
@@ -137,16 +168,24 @@ def draw_win_screen():
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if belongs(325, 263, 575, 337, *event.pos):
                     button_sound.play()
-                    draw_level()
+                    draw_main_menu()
         pygame.display.flip()
 
 
 def draw_level():
+    """Функция запуска уровня 1"""
     if current_level == 1:
         draw_level1()
 
 
 def draw_between_level_menu():
+
+    """
+    Функция отрисовки меню меню между первым уровнем и финалом
+        В функции создаётся кнопка запуска следующего уровня и возврата в стартовое меню
+    :return:
+    """
+
     global screen
 
     pygame.font.init()
@@ -186,6 +225,21 @@ def draw_between_level_menu():
 
 
 def draw_level1():
+
+    """
+    Функия отрисовки перовго уровня
+        Функция отрисовывает поле уровня,
+            три объекта врага,
+            один объект героя,
+            один объект пули при выстреле
+        Функция проверяет столкновение спрайтов игрока и пулей
+            и отрисовывает меню поражения
+        Функция проверяет столкновение спрайтов игрока и врага
+            и отрисовывает меня выбора финального уровня
+        Функция использует pygame.time.Clock
+    :return:
+    """
+
     global screen
     screen = pygame.display.set_mode(screen_size_level)
     screen.fill((0, 0, 0))
@@ -239,7 +293,7 @@ def draw_level1():
             bullet.move()
             enemy_sprites.draw(screen)
             pygame.display.flip()
-            clock.tick(10)
+            clock.tick(4)
             if hero.rect.colliderect(bullet.rect):
                 defeat_sound.play()
                 bullet.kill()
@@ -251,6 +305,21 @@ def draw_level1():
 
 
 def draw_final_level():
+
+    """
+    Функия отрисовки финального уровня
+        Функция отрисовывает поле уровня,
+            один объект босса,
+            один объект героя,
+            два объекта пули при выстреле
+        Функция проверяет столкновение спрайтов игрока и пулей
+            и отрисовывает меню поражения
+        Функция проверяет столкновение спрайтов игрока и врага
+            и отрисовывает меня победы
+        Функция использует pygame.time.Clock
+    :return:
+    """
+
     global screen
     screen = pygame.display.set_mode(screen_size_level)
     screen.fill((0, 0, 0))
@@ -305,7 +374,7 @@ def draw_final_level():
             bullet2.move()
             bullets.draw(screen)
             pygame.display.flip()
-            clock.tick(10)
+            clock.tick(4)
             if hero.rect.colliderect(bullet1.rect) or hero.rect.colliderect(bullet2.rect):
                 defeat_sound.play()
                 bullet1.kill()
@@ -318,6 +387,13 @@ def draw_final_level():
 
 
 class FinalBoss(pygame.sprite.Sprite):
+
+    """
+    Класс финального босса
+        В классе настраивается изображение босса
+        В классе устанавливаются размеры спрайта
+    """
+
     image = download_image('boss.png')
 
     def __init__(self, *group):
@@ -328,6 +404,14 @@ class FinalBoss(pygame.sprite.Sprite):
 
 
 class Enemy(pygame.sprite.Sprite):
+
+    """
+    Класс врага
+        В классе настраивается изображение врага
+        В классе устанавливаются размеры спрайта
+            и позиция врага на поле
+    """
+
     image = download_image('enemy.png')
 
     def __init__(self, n, *group):
@@ -350,6 +434,14 @@ class Enemy(pygame.sprite.Sprite):
 
 
 class Shot(pygame.sprite.Sprite):
+
+    """
+    Класс пули
+        В классе настраивается изображение пули
+        В классе устанавливаются размеры спрайта
+        В классе реализована функция выстрела move()
+    """
+
     image = download_image('bullet.png')
 
     def __init__(self, n, *group, final=False):
@@ -361,16 +453,26 @@ class Shot(pygame.sprite.Sprite):
             self.rect.y = 200
         else:
             self.rect.y = 0
-        if pygame.sprite.spritecollideany(self, heroes):
-            print(1)
+        # if pygame.sprite.spritecollideany(self, heroes):
+        #     print(1)
 
     def move(self):
+
+        """
+        Функция движения пули
+            Каждый тик пуля двигается вперёд на одну клетку
+            Если пуля не находится в изначальной позиции,
+                предыдущее положение пули закрашивается
+        :return:
+        """
+
         if self.rect.y != 0:
             pygame.draw.rect(screen, (0, 0, 0), (self.rect.x + 1, self.rect.y + 1 - 100, 98, 98), 0)
         self.rect = self.rect.move(0, 100)
 
 
 def choice(group):
+    """Функция выбора случайного спрайта из группы enemy_sprites"""
     global enemy_sprites
     n = randint(1, len(group))
     i = 1
@@ -381,6 +483,14 @@ def choice(group):
 
 
 class Hero1(pygame.sprite.Sprite):
+
+    """
+    Класс финального героя
+        В классе настраивается изображение героя
+        В классе устанавливаются размеры спрайта
+        В классе реализована фунция движения героя move()
+    """
+
     image = download_image('hero1.png')
 
     def __init__(self, *group):
@@ -391,10 +501,21 @@ class Hero1(pygame.sprite.Sprite):
         self.rect.y = 600
 
     def move(self, direction):
+
+        """
+        Функция движения героя
+            Герой перемещается в одну из трёх клеток впереди
+                в зависимости от указнного нажатием кнопки направления
+            После хода героя клетка с его предыдущим положением закрашивается
+        :param direction:
+        :return:
+        """
+
         pygame.draw.rect(screen, (0, 0, 0), (self.rect.x + 1, self.rect.y + 1, 98, 98), 0)
         self.rect.y -= 100
         self.rect.x += (100 * direction)
         self.rect.x %= 300
 
 
-start_game()
+if __name__ == '__main__':
+    start_game()
