@@ -293,7 +293,7 @@ def draw_level1():
             bullet.move()
             enemy_sprites.draw(screen)
             pygame.display.flip()
-            clock.tick(4)
+            clock.tick(8)
             if hero.rect.colliderect(bullet.rect):
                 defeat_sound.play()
                 bullet.kill()
